@@ -1,0 +1,13 @@
+{
+  "tasks": [],
+  "indexes": [
+    {
+      "index_type": "group_by_name",
+      "id": "6dab465d-17ba-4832-867d-748c77f5a7ec",
+      "gname_id": {
+        "default": []
+      }
+    }
+  ],
+  "id": 6
+}

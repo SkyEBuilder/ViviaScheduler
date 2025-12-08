@@ -1,0 +1,78 @@
+{
+  "tasks": [
+    {
+      "template_type": "fixed_period",
+      "name": "test",
+      "mandatory": true,
+      "priority": 1,
+      "id": "492391e8-185b-40ea-9d56-3aa11483d1e1",
+      "container": [
+        {
+          "intervals": [
+            {
+              "start_interval": [
+                "2008-08-31T00:00:00Z",
+                "2008-08-31T01:00:00Z"
+              ],
+              "duration_interval": [
+                3600.0,
+                3600.0
+              ],
+              "end_interval": [
+                "2008-08-31T00:00:00Z",
+                "2008-08-31T01:00:00Z"
+              ],
+              "name": "test2008-08-31 00:00:00+00:00",
+              "mandatory": true,
+              "priority": 1,
+              "id": "647d8ecb-404c-471a-862b-68bca8985808",
+              "actual_interval": {
+                "start": "2008-08-31T00:00:00Z",
+                "end": "2008-08-31T01:00:00Z",
+                "duration": 3600.0
+              }
+            }
+          ],
+          "constraints": [],
+          "time_stamp": "2008-08-31T00:00:00Z"
+        }
+      ],
+      "period_unit_len": 3600.0,
+      "period_unit_num": 2,
+      "anchor_date": "2008-08-31T00:00:00Z",
+      "effective_interval": [
+        "2008-08-31T00:00:00Z",
+        "2008-09-01T00:00:00Z"
+      ],
+      "period_items": [
+        {
+          "start_interval": [
+            0.0,
+            3600.0
+          ],
+          "duration_interval": [
+            3600.0,
+            3600.0
+          ],
+          "end_interval": [
+            0.0,
+            3600.0
+          ],
+          "active_index": 0
+        }
+      ]
+    }
+  ],
+  "indexes": [
+    {
+      "index_type": "group_by_name",
+      "id": "67148959-c4b1-4974-a812-854613863f8c",
+      "gname_id": {
+        "default": [
+          "492391e8-185b-40ea-9d56-3aa11483d1e1"
+        ]
+      }
+    }
+  ],
+  "id": 3
+}

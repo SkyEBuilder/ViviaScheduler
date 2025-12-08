@@ -1,0 +1,9 @@
+pydantic
+ortools
+fastapi
+
+[dev]
+pytest
+mypy
+ruff
+black

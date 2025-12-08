@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: vivia_v4
+Version: 0.1.0
+Summary: 通用任务安排器，基于 OR-Tools CP-SAT，强类型工程。
+Requires-Python: >=3.13
+Requires-Dist: pydantic
+Requires-Dist: ortools
+Requires-Dist: fastapi
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: mypy; extra == "dev"
+Requires-Dist: ruff; extra == "dev"
+Requires-Dist: black; extra == "dev"
