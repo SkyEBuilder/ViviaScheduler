@@ -1,7 +1,8 @@
 import datetime as DT
+from pydantic.types import AwareDatetime
 import uuid
 from abc import ABC, abstractmethod
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, Self
 
 from ortools.sat.python import cp_model
 from pydantic import AwareDatetime, BaseModel, Field, PrivateAttr, model_validator
@@ -78,7 +79,8 @@ class CPModelVariables(BaseModel):
     def is_empty(self) -> bool:
         return self.start is None and self.end is None and self.presence is None and self.interval is None
     
-    def set_model_vars(self, start: cp_model.IntVar, end: cp_model.IntVar, presence: cp_model.IntVar, interval: cp_model.IntervalVar) -> 'CPModelVariables':
+    def set_model_vars(self,start:cp_model.IntVar, end:cp_model.IntVar, presence:cp_model.IntVar,
+                        interval:cp_model.IntervalVar) -> 'CPModelVariables':
         return CPModelVariables(start=start, end=end, presence=presence, interval=interval)
     
     def clear_model_vars(self) -> 'CPModelVariables':
@@ -94,12 +96,16 @@ class ScheduleInterval(IntervalValidationMixin[AwareDatetime, TimeDelta]):
     _cp_model_vars: CPModelVariables = PrivateAttr(default_factory=CPModelVariables)
     _source_task_id: uuid.UUID | None = PrivateAttr(default=None)
 
-    def create_cp_model_vars(self, cp_model: cp_model.CpModel, schedule_start: DT.datetime, schedule_end: DT.datetime, unit_length: DT.timedelta):
+    def create_cp_model_vars(
+        self, cp_model: cp_model.CpModel,
+        schedule_start: DT.datetime, schedule_end: DT.datetime,
+        unit_length: DT.timedelta) -> CPModelVariables:
+
         if not IntervalUtil.is_contained((self.start_interval), (schedule_start, schedule_end)):
             raise ValueError("Inproper interval, it is not contained in the schedule domain")
             pass
         from math import ceil
-        def interval2unit(interval: tuple[DT.datetime, DT.datetime]):
+        def interval2unit(interval: tuple[DT.datetime, DT.datetime]) -> tuple[int, int]:
             lb = ceil((interval[0] - schedule_start) / unit_length)
             rb = (interval[1] - schedule_start) // unit_length
             return (lb, max(lb, rb))
@@ -114,7 +120,9 @@ class ScheduleInterval(IntervalValidationMixin[AwareDatetime, TimeDelta]):
         end_var = cp_model.NewIntVar(min_end, max_end, self.name + "_end_var")
         duration_var = cp_model.NewIntVar(min_duration, max_duration, self.name + "_duration_var")
         presence_var = cp_model.new_bool_var(self.name + "_presence_var")
-        interval_var = cp_model.NewOptionalIntervalVar(start_var, duration_var, end_var, presence_var, self.name + "_interval_var")
+        interval_var = cp_model.NewOptionalIntervalVar(
+            start_var, duration_var, end_var, presence_var, self.name + "_interval_var"
+        )
         if self.mandatory:
             cp_model.add(presence_var == 1)
         cp_model_vars = self._cp_model_vars.set_model_vars(
@@ -175,10 +183,10 @@ class ExactDateTask(Tasktemplate, IntervalValidationMixin[AwareDatetime, TimeDel
     repeatition: int = Field(description="The repeatition of the task")
     container: Interval_List = Field(description="The List of the intervals", default=Interval_List())
     @property
-    def effective_interval(self):
+    def effective_interval(self) -> tuple[AwareDatetime, AwareDatetime]:
         return self.start_interval[0], self.end_interval[1]
     @model_validator(mode="after")
-    def initialize(self):
+    def initialize(self) -> Self:
         intervals = []
         for i in range(self.repeatition):
             new_interval = ScheduleInterval(
