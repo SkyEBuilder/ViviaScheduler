@@ -1,21 +1,10 @@
 import operator
 import datetime
 from typing import Any, TypeVar, Protocol
+
+
 from collections.abc import Callable
 from pydantic import BaseModel
-
-def validate_aware_datetime(dt: Any) -> datetime.datetime:
-    if isinstance(dt, str):
-        try:
-            parsed = datetime.datetime.fromisoformat(dt)
-        except Exception as e:
-            raise ValueError(f"Invalid datetime string: {dt!r}") from e
-        dt = parsed
-    if not isinstance(dt, datetime.datetime):
-        raise TypeError("Value must be a datetime")
-    if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
-        raise ValueError("Datetime must be timezone-aware")
-    return dt
 
 
 class Comparable(Protocol):

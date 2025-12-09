@@ -55,12 +55,14 @@ def retain_date(datetime: DT.datetime) -> DT.datetime:
         )
 
 class Period():
-    def __init__(self, anchor_date: DT.datetime, period_length: DT.timedelta, timezone: DT.timezone) -> None:
+    def __init__(self, anchor_date: DT.datetime, period_length: DT.timedelta) -> None:
         self.anchor_datetime = anchor_date
         self.period_length = period_length
-        self.timezone = timezone
+        if self.anchor_datetime.tzinfo is None:
+            raise ValueError("Anchor datetime must be timezone-aware")
+        self.timezone = self.anchor_datetime.tzinfo
         self.period = (self.anchor_datetime, self.anchor_datetime + self.period_length)
-        print(self.anchor_datetime)
+        # print(self.anchor_datetime)
 
     def get_period(self, target_time: DT.datetime):
         target_time = target_time.astimezone(self.timezone)
@@ -107,8 +109,7 @@ if __name__ == "__main__":
     from datetime import timezone
     anchor = DT.datetime(2023, 10, 6, 12, 0, 0, tzinfo=timezone.utc)
     period_length = DT.timedelta(minutes=30)
-    tz = timezone.utc
-    p = Period(anchor, period_length, tz)
+    p = Period(anchor, period_length)
     print("Initial period:", p.period)
     next_p = p.next_period()
     print("Next period:", next_p)

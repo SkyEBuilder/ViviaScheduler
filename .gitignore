@@ -91,3 +91,5 @@ dmypy.json
 
 # Project specific
 *.log
+# Trae IDE workspace
+.trae/

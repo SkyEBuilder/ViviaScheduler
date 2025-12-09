@@ -1,15 +1,19 @@
 import datetime as DT
-from pydantic.types import AwareDatetime
+from pydantic import AwareDatetime
 import uuid
 from abc import ABC, abstractmethod
-from typing import Annotated, Any, Literal, Self
+from typing import Annotated, Any, Literal, Self, TYPE_CHECKING
 
 from ortools.sat.python import cp_model
-from pydantic import AwareDatetime, BaseModel, Field, PrivateAttr, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
 from vivia_v4.model_definitions import IntervalValidationMixin, TimeDelta
 from vivia_v4.utils import IntervalUtil, Period
 from vivia_v4.validators import ensure_all_or_none, validate_field_types
+from vivia_v4.constraints import constraint, ALL_CONSTRAINTS
+
+if TYPE_CHECKING:
+    from vivia_v4.task_pool import ViviaTaskPool
 
 
 class RealInterval(BaseModel):
@@ -95,15 +99,15 @@ class ScheduleInterval(IntervalValidationMixin[AwareDatetime, TimeDelta]):
     actual_interval: RealInterval = Field(default_factory=RealInterval)
     _cp_model_vars: CPModelVariables = PrivateAttr(default_factory=CPModelVariables)
     _source_task_id: uuid.UUID | None = PrivateAttr(default=None)
+    labels: set[str] = Field(description="Labels for grouping and querying", default_factory=set)
 
     def create_cp_model_vars(
         self, cp_model: cp_model.CpModel,
         schedule_start: DT.datetime, schedule_end: DT.datetime,
         unit_length: DT.timedelta) -> CPModelVariables:
 
-        if not IntervalUtil.is_contained((self.start_interval), (schedule_start, schedule_end)):
+        if not IntervalUtil.is_contained((self.start_interval[0], self.end_interval[1]), (schedule_start, schedule_end)):
             raise ValueError("Inproper interval, it is not contained in the schedule domain")
-            pass
         from math import ceil
         def interval2unit(interval: tuple[DT.datetime, DT.datetime]) -> tuple[int, int]:
             lb = ceil((interval[0] - schedule_start) / unit_length)
@@ -146,11 +150,6 @@ class ScheduleInterval(IntervalValidationMixin[AwareDatetime, TimeDelta]):
         self.actual_interval = self.actual_interval.set_interval(e_start, e_end)
         return self.actual_interval
 
-class constraint(BaseModel, ABC):
-    @abstractmethod
-    def apply_constraint2cp_model(self, model: cp_model.CpModel):
-        pass
-
 class Interval_Container(BaseModel):
     pass
 
@@ -164,10 +163,10 @@ class Interval_List(Interval_Container):
         return min(all_start_L), max(all_end_R)
 
 class Interval_List_Timestamped(Interval_List):
+    """the time-stamp means the start of the list of intervals"""
     time_stamp: AwareDatetime
 
 class Tasktemplate(BaseModel):
-    template_type: Literal["exact_date", "fixed_period"] = Field(description="The type of the task template")
     name: str = Field(description="The name of the task")
     mandatory: bool = Field(description="Whether the task is mandatory")
     priority: int = Field(description="The priority of the task")
@@ -179,7 +178,7 @@ class Tasktemplate(BaseModel):
         pass
 
 class ExactDateTask(Tasktemplate, IntervalValidationMixin[AwareDatetime, TimeDelta]):
-    template_type: Literal["exact_date"] = "exact_date"
+    template_type: Literal["exact_date"] = Field(default="exact_date", frozen=True)
     repeatition: int = Field(description="The repeatition of the task")
     container: Interval_List = Field(description="The List of the intervals", default=Interval_List())
     @property
@@ -207,32 +206,51 @@ class ExactDateTask(Tasktemplate, IntervalValidationMixin[AwareDatetime, TimeDel
         return []
 
 class RelativePeriodItem(IntervalValidationMixin[TimeDelta, TimeDelta]):
+    """The start_var and end_var relative to the active_index_th unit inside a period,allow underflow and overflow"""
     active_index: int
     
 class FixedPeriodTask(Tasktemplate):
-    template_type: Literal["fixed_period"] = "fixed_period"
+    template_type: Literal["fixed_period"] = Field(default="fixed_period", frozen=True)
     period_unit_len: TimeDelta = Field(description="The length of a period_unit (not the unit in scheduler)", default=DT.timedelta(days=1))
     period_unit_num: int = Field(description="The number of period_unit in a period")
     anchor_date: AwareDatetime
     effective_interval: tuple[AwareDatetime, AwareDatetime]
     period_items: list[RelativePeriodItem]
     container: list[Interval_List_Timestamped] = Field(description="The List of the intervals", default=list())
-    _offset_lb: TimeDelta = PrivateAttr()
-    _offset_rb: TimeDelta = PrivateAttr()
+    _offset_lb: TimeDelta = PrivateAttr()# how much the really possible leftbound is offset from the period start
+    _offset_rb: TimeDelta = PrivateAttr()# how much the really possible rightbound is offset from the period start
     _period: Period = PrivateAttr()
     @model_validator(mode="after")
     def validate_active_days(self):
-        for item in self.period_items:
-            if item.active_index < 0 or item.active_index > self.period_unit_num:
-                raise ValueError("overflowing index for active_days")
-        all_start = []
-        all_end = []
-        for item in self.period_items:
-            all_start.append(item.active_index * self.period_unit_len + item.start_interval[0])
-            all_end.append(item.active_index * self.period_unit_len + item.end_interval[1])
-        self._offset_lb = min(all_start)
-        self._offset_rb = max(all_end)
-        self._period = Period(self.anchor_date, self.period_unit_num * self.period_unit_len, self.anchor_date.tzinfo)
+        """
+        Validates configuration and initializes internal state.
+        
+        Calculates the full period length and the bounding box of offsets (_offset_lb, _offset_rb)
+        based on the provided period_items. Initializes the helper Period object.
+        """
+        def validate_indices():
+            """Checks if the active_index is valid, it ranges from 0 to period_unit_num - 1"""
+            for item in self.period_items:
+                if item.active_index < 0 or item.active_index > self.period_unit_num - 1:
+                    raise ValueError("overflowing index for active_days")
+
+        def calculate_offsets():
+            """Calculates the offset_lb and offset_rb based on period items"""
+            all_start = []
+            all_end = []
+            for item in self.period_items:
+                all_start.append(item.active_index * self.period_unit_len + item.start_interval[0])
+                all_end.append(item.active_index * self.period_unit_len + item.end_interval[1])
+            self._offset_lb = min(all_start)  # the left most possible start time of an interval in a period
+            self._offset_rb = max(all_end)    # the right most possible end time of an interval in a period
+
+        def initialize_period():
+            """Initializes the helper Period object"""
+            self._period = Period(self.anchor_date, self.period_unit_num * self.period_unit_len)
+
+        validate_indices()
+        calculate_offsets()
+        initialize_period()
         return self
     @property
     def datetime_stamps(self):
@@ -241,11 +259,18 @@ class FixedPeriodTask(Tasktemplate):
     def period_len(self):
         return self.period_unit_len * self.period_unit_num
     def _get_period_with_offset(self, target_time: AwareDatetime):
+        """
+        Returns the period with offset applied to the left and right bounds, which is the real period occupied by the tasks.
+        """
         pl, pr = self._period.get_period(target_time=target_time)
         pl += self._offset_lb
         pr = pl + self._offset_rb
         return pl, pr
     def _generate_period_intervals(self, target_time: AwareDatetime):
+        """
+        Generates the interval list for a single period, based on the target_time.
+        The time-stamp is the start of the period, not the occupied period start.
+        """
         pl, pb = self._period.get_period(target_time=target_time)
         ext = [x for x in self.container if x.time_stamp == pl]
         if len(ext) > 1:

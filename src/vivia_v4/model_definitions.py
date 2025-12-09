@@ -53,8 +53,3 @@ TimeDelta = Annotated[
     BeforeValidator(timedelta_validator),
     PlainSerializer(timedelta_serializer)
 ]
-
-AwareDatetime = Annotated[
-    datetime.datetime,
-    AfterValidator(VD.validate_aware_datetime)
-]
