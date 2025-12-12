@@ -4,7 +4,7 @@
       "name": "test",
       "mandatory": true,
       "priority": 1,
-      "id": "643cbf7f-96ad-4c95-91f1-eee536b3c97e",
+      "id": "3788886f-3f58-4643-8bae-7ac67ec3014c",
       "container": [
         {
           "intervals": [
@@ -24,7 +24,7 @@
               "name": "test2008-08-31 00:00:00+00:00",
               "mandatory": true,
               "priority": 1,
-              "id": "a4d640be-79f4-453a-8197-98a79323d0e8",
+              "id": "1f5b641a-4a3d-4410-9a4e-cfe0f55aadbe",
               "actual_interval": {
                 "start": "2008-08-31T00:00:00Z",
                 "end": "2008-08-31T01:00:00Z"
@@ -65,21 +65,21 @@
   ],
   "indexes": [
     {
-      "id": "b95d0d25-2a1d-4c18-a6bd-a077d2d3c488",
+      "id": "9e134034-a2ed-49ff-a0c5-734809e7469d",
       "index_type": "group_index",
       "template_groups": {
         "default": [
-          "643cbf7f-96ad-4c95-91f1-eee536b3c97e"
+          "3788886f-3f58-4643-8bae-7ac67ec3014c"
         ]
       },
       "interval_groups": {}
     },
     {
-      "id": "436d7afe-7d5d-4d4e-8bdb-7a6fe86a5c38",
+      "id": "1be478c5-983a-4f45-8240-5d3ee21e5ae5",
       "index_type": "id_index"
     },
     {
-      "id": "f08e6ef5-0bb0-46c6-9157-6ff28292d954",
+      "id": "6c1984b7-53a4-4c0d-a142-051db4adf68a",
       "index_type": "label_index"
     }
   ],

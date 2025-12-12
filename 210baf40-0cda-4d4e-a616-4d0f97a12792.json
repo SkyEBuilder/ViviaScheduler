@@ -1,0 +1,80 @@
+{
+  "tasks": [
+    {
+      "start_interval": [
+        "2024-01-01T00:00:00Z",
+        "2024-01-01T00:00:00Z"
+      ],
+      "duration_interval": [
+        3600.0,
+        3600.0
+      ],
+      "end_interval": [
+        "2024-01-01T02:00:00Z",
+        "2024-01-01T02:00:00Z"
+      ],
+      "name": "api_test_task",
+      "mandatory": true,
+      "priority": 1,
+      "id": "9168dd84-6d46-4ef4-8ef2-5ebe3d92c274",
+      "container": {
+        "intervals": [
+          {
+            "start_interval": [
+              "2024-01-01T00:00:00Z",
+              "2024-01-01T00:00:00Z"
+            ],
+            "duration_interval": [
+              3600.0,
+              3600.0
+            ],
+            "end_interval": [
+              "2024-01-01T02:00:00Z",
+              "2024-01-01T02:00:00Z"
+            ],
+            "name": "api_test_task0",
+            "mandatory": true,
+            "priority": 1,
+            "id": "aac6f5d2-3a85-4f6f-a329-3818da120263",
+            "actual_interval": {
+              "start": null,
+              "end": null
+            },
+            "labels": []
+          }
+        ],
+        "constraints": []
+      },
+      "template_type": "exact_date",
+      "repeatition": 1
+    }
+  ],
+  "indexes": [
+    {
+      "id": "d4ec52e4-ad3c-4102-93d3-27ca0dc734ef",
+      "index_type": "group_index",
+      "template_groups": {
+        "default": [
+          "9168dd84-6d46-4ef4-8ef2-5ebe3d92c274"
+        ]
+      },
+      "interval_groups": {}
+    },
+    {
+      "id": "13b239da-22b5-4510-93ea-80e35d80f129",
+      "index_type": "id_index"
+    },
+    {
+      "id": "cf710ab4-900d-4202-975b-de9d051ace87",
+      "index_type": "label_index"
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_type": "no_overlap",
+      "group_name": "default",
+      "label": null
+    }
+  ],
+  "id": 2693011846912895013
+}

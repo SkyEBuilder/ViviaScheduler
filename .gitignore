@@ -93,3 +93,13 @@ dmypy.json
 *.log
 # Trae IDE workspace
 .trae/
+
+skinkevravia.top_full.crt
+
+# Certs and Keys
+*.crt
+*.key
+
+
+artifacts/
+tests/artifacts/

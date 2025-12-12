@@ -123,12 +123,12 @@ class ScheduleInterval(IntervalValidationMixin[AwareDatetime, TimeDelta]):
         start_var = cp_model.NewIntVar(min_start, max_start, self.name + "_start_var")
         end_var = cp_model.NewIntVar(min_end, max_end, self.name + "_end_var")
         duration_var = cp_model.NewIntVar(min_duration, max_duration, self.name + "_duration_var")
-        presence_var = cp_model.new_bool_var(self.name + "_presence_var")
+        presence_var = cp_model.NewBoolVar(self.name + "_presence_var")
         interval_var = cp_model.NewOptionalIntervalVar(
             start_var, duration_var, end_var, presence_var, self.name + "_interval_var"
         )
         if self.mandatory:
-            cp_model.add(presence_var == 1)
+            cp_model.Add(presence_var == 1)
         cp_model_vars = self._cp_model_vars.set_model_vars(
             start=start_var,
             end=end_var,
@@ -145,9 +145,15 @@ class ScheduleInterval(IntervalValidationMixin[AwareDatetime, TimeDelta]):
             return a
         assert self._cp_model_vars.start is not None
         assert self._cp_model_vars.end is not None
-        e_start = unit_interval2datetime(cp_solver.Value(self._cp_model_vars.start))
-        e_end = unit_interval2datetime(cp_solver.Value(self._cp_model_vars.end))
-        self.actual_interval = self.actual_interval.set_interval(e_start, e_end)
+        presence_val = None
+        if self._cp_model_vars.presence is not None:
+            presence_val = cp_solver.Value(self._cp_model_vars.presence)
+        if presence_val == 1 or self._cp_model_vars.presence is None:
+            e_start = unit_interval2datetime(cp_solver.Value(self._cp_model_vars.start))
+            e_end = unit_interval2datetime(cp_solver.Value(self._cp_model_vars.end))
+            self.actual_interval = self.actual_interval.set_interval(e_start, e_end)
+        else:
+            self.actual_interval = self.actual_interval.clear_interval()
         return self.actual_interval
 
 class Interval_Container(BaseModel):
@@ -186,19 +192,20 @@ class ExactDateTask(Tasktemplate, IntervalValidationMixin[AwareDatetime, TimeDel
         return self.start_interval[0], self.end_interval[1]
     @model_validator(mode="after")
     def initialize(self) -> Self:
-        intervals = []
-        for i in range(self.repeatition):
-            new_interval = ScheduleInterval(
-                name=self.name + str(i),
-                mandatory=self.mandatory,
-                priority=self.priority,
-                start_interval=self.start_interval,
-                end_interval=self.end_interval,
-                duration_interval=self.duration_interval,
-            )
-            new_interval._source_task_id = self.id
-            intervals.append(new_interval)
-        self.container.intervals = intervals
+        if not self.container.intervals:
+            intervals = []
+            for i in range(self.repeatition):
+                new_interval = ScheduleInterval(
+                    name=self.name + str(i),
+                    mandatory=self.mandatory,
+                    priority=self.priority,
+                    start_interval=self.start_interval,
+                    end_interval=self.end_interval,
+                    duration_interval=self.duration_interval,
+                )
+                new_interval._source_task_id = self.id
+                intervals.append(new_interval)
+            self.container.intervals = intervals
         return self
     def get_intervals(self, start: DT.datetime, end: DT.datetime) -> list[ScheduleInterval]:
         if IntervalUtil.is_contained(self.effective_interval, (start, end)):
@@ -262,10 +269,10 @@ class FixedPeriodTask(Tasktemplate):
         """
         Returns the period with offset applied to the left and right bounds, which is the real period occupied by the tasks.
         """
-        pl, pr = self._period.get_period(target_time=target_time)
-        pl += self._offset_lb
-        pr = pl + self._offset_rb
-        return pl, pr
+        p_start, _ = self._period.get_period(target_time=target_time)
+        occupied_start = p_start + self._offset_lb
+        occupied_end = p_start + self._offset_rb
+        return occupied_start, occupied_end
     def _generate_period_intervals(self, target_time: AwareDatetime):
         """
         Generates the interval list for a single period, based on the target_time.

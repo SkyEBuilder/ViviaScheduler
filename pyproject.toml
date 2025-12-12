@@ -7,6 +7,10 @@ dependencies = [
   "pydantic",
   "ortools",
   "fastapi",
+  "uvicorn",
+  "pydantic-settings",
+  "email-validator>=2.3.0",
+  "gradio>=6.1.0",
 ]
 
 [project.optional-dependencies]
@@ -29,3 +33,8 @@ warn_unused_configs = true
 target-version = "py313"
 line-length = 100
 select = ["E", "F", "I", "UP", "B", "ANN"]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+]

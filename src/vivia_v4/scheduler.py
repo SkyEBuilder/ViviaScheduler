@@ -45,10 +45,10 @@ class ViviaScheduler(BaseModel):
         
         status = self.solver.Solve(self.model)
         
-        if status == cp_model.OPTIMAL:
-            print("Optimal solution found!")
+        if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            msg = "Optimal solution found!" if status == cp_model.OPTIMAL else "Feasible solution found!"
+            print(msg)
             for i in self._ctx.all_intervals:
                 i.interprete_cp_model_vars(self.solver, self.schedule_range[0], self.schedule_range[1], self.unit_length)
         else:
-            print("No optimal solution found.")
-
+            print("No feasible solution found.")
