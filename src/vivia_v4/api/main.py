@@ -112,13 +112,10 @@ async def solve_schedule(
 
 # Mount Gradio app to /admin
 import gradio as gr
-import sys
-import os
 
-# Add project root to sys.path to allow importing admin_ui
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
-if project_root not in sys.path:
-    sys.path.append(project_root)
-
-from admin_ui import demo as gradio_admin_app
+from vivia_v4.admin_ui import demo as gradio_admin_app
 app = gr.mount_gradio_app(app, gradio_admin_app, path="/admin")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info")

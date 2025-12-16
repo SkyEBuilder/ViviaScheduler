@@ -1253,34 +1253,31 @@ dependencies = [
     { name = "uvicorn" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "black" },
+    { name = "httpx" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
 ]
 
-[package.dev-dependencies]
-dev = [
-    { name = "httpx" },
-]
-
 [package.metadata]
 requires-dist = [
-    { name = "black", marker = "extra == 'dev'" },
     { name = "email-validator", specifier = ">=2.3.0" },
     { name = "fastapi" },
     { name = "gradio", specifier = ">=6.1.0" },
-    { name = "mypy", marker = "extra == 'dev'" },
     { name = "ortools" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
-    { name = "pytest", marker = "extra == 'dev'" },
-    { name = "ruff", marker = "extra == 'dev'" },
     { name = "uvicorn" },
 ]
-provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "httpx", specifier = ">=0.28.1" }]
+dev = [
+    { name = "black" },
+    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "ruff" },
+]

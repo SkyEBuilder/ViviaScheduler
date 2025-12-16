@@ -76,9 +76,10 @@ def test_admin_registration_flow():
     assert str(task.id) in intervals
     assert len(intervals[str(task.id)]) == 1
     
-    # Verify persistence: check if {user_id}.json exists
+    # Verify persistence: check if {user_id}.json exists in data dir
     user_id = user_data["user_id"]
-    assert os.path.exists(f"{user_id}.json")
+    expected_path = os.path.join(settings.data_dir, f"{user_id}.json")
+    assert os.path.exists(expected_path)
 
 def test_auth_failure():
     resp = client.post("/tasks/create", headers={"X-API-Key": "INVALID"}, json={})

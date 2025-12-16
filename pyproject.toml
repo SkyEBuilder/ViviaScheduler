@@ -13,12 +13,13 @@ dependencies = [
   "gradio>=6.1.0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-  "pytest",
-  "mypy",
-  "ruff",
-  "black",
+    "pytest",
+    "mypy",
+    "ruff",
+    "black",
+    "httpx>=0.28.1",
 ]
 
 [tool.mypy]
@@ -33,8 +34,3 @@ warn_unused_configs = true
 target-version = "py313"
 line-length = 100
 select = ["E", "F", "I", "UP", "B", "ANN"]
-
-[dependency-groups]
-dev = [
-    "httpx>=0.28.1",
-]

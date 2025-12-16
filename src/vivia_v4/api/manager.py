@@ -4,6 +4,10 @@ import uuid
 from vivia_v4.task_pool import ViviaTaskPool
 from vivia_v4.api.config import settings
 
+def ensure_data_dir():
+    if not os.path.exists(settings.data_dir):
+        os.makedirs(settings.data_dir)
+
 class PoolManager:
     """
     Manages loading and saving ViviaTaskPool instances for users.
@@ -12,7 +16,8 @@ class PoolManager:
     
     @staticmethod
     def get_pool_filename(user_id: str) -> str:
-        return f"{user_id}.json"
+        ensure_data_dir()
+        return os.path.join(settings.data_dir, f"{user_id}.json")
 
     @staticmethod
     def load_pool(user_id: str) -> ViviaTaskPool:
@@ -45,18 +50,25 @@ class UserManager:
     """
     
     @staticmethod
+    def _get_users_path() -> str:
+        ensure_data_dir()
+        return os.path.join(settings.data_dir, settings.users_file)
+
+    @staticmethod
     def _load_users() -> dict:
-        if not os.path.exists(settings.users_file):
+        path = UserManager._get_users_path()
+        if not os.path.exists(path):
             return {}
         try:
-            with open(settings.users_file, 'r', encoding='utf-8') as f:
+            with open(path, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except json.JSONDecodeError:
             return {}
 
     @staticmethod
     def _save_users(users: dict) -> None:
-        with open(settings.users_file, 'w', encoding='utf-8') as f:
+        path = UserManager._get_users_path()
+        with open(path, 'w', encoding='utf-8') as f:
             json.dump(users, f, indent=2)
 
     @staticmethod
