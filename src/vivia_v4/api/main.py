@@ -118,4 +118,5 @@ app = gr.mount_gradio_app(app, gradio_admin_app, path="/admin")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info")
+    # uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info")
+    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info", ssl_keyfile="skinkebravia.top_private.key", ssl_certfile="skinkebravia.top_full.crt")
